@@ -14,6 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class MeetingService {
@@ -21,7 +22,7 @@ public class MeetingService {
     DateFormat shortDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
     public ResponseEntity<String> removePersonFromMeeting(int meetingId, String emailAddress) {
-        ArrayList<Meeting> allMeetings = DataRW.getMeetings();
+        List<Meeting> allMeetings = DataRW.getMeetings();
         Meeting meeting = getMeetingById(meetingId, allMeetings);
 
         if (meeting == null)
@@ -42,7 +43,7 @@ public class MeetingService {
     }
 
     public ResponseEntity<String> addPersonToMeeting(int meetingId, String emailAddress) throws ParseException {
-        ArrayList<Meeting> allMeetings = DataRW.getMeetings();
+        List<Meeting> allMeetings = DataRW.getMeetings();
         Meeting meeting = getMeetingById(meetingId, allMeetings);
 
         if (meeting == null)
@@ -61,7 +62,7 @@ public class MeetingService {
         }
     }
 
-    private void updateMeeting(Meeting meeting, ArrayList<Meeting> allMeetings) {
+    private void updateMeeting(Meeting meeting, List<Meeting> allMeetings) {
         allMeetings = DataRW.getMeetings();
         for (int i = 0; i < allMeetings.size(); i++) {
             if (allMeetings.get(i).getId() == meeting.getId()) {
@@ -71,7 +72,7 @@ public class MeetingService {
         DataRW.writeMeetings(allMeetings);
     }
 
-    private Boolean isPersonBusyDuringMeeting(String emailAddress, String startDateTime, String endDateTime, int meetingId, ArrayList<Meeting> allMeetings) throws ParseException {
+    private Boolean isPersonBusyDuringMeeting(String emailAddress, String startDateTime, String endDateTime, int meetingId, List<Meeting> allMeetings) throws ParseException {
         allMeetings = DataRW.getMeetings();
         Date startDate = longDateFormat.parse(startDateTime);
         Date endDate = longDateFormat.parse(endDateTime);
@@ -94,7 +95,7 @@ public class MeetingService {
     }
 
     public ResponseEntity<String> deleteMeeting(int meetingId, String authToken) {
-        ArrayList<Meeting> allMeetings = DataRW.getMeetings();
+        List<Meeting> allMeetings = DataRW.getMeetings();
         Meeting meeting = getMeetingById(meetingId, allMeetings);
         if (meeting == null)
             return new ResponseEntity<>("Meeting not found", HttpStatus.NOT_FOUND);
@@ -120,7 +121,7 @@ public class MeetingService {
         if (!type.equals("Live") && !type.equals("InPerson"))
             return new ResponseEntity<>("Type is not correct", HttpStatus.BAD_REQUEST);
 
-        ArrayList<Meeting> allMeetings = DataRW.getMeetings();
+        List<Meeting> allMeetings = DataRW.getMeetings();
         for (Meeting checkMeeting : allMeetings) {
             if (checkMeeting.getId() == meeting.getId())
                 return new ResponseEntity<>("Meeting with this ID already exists", HttpStatus.BAD_REQUEST);
@@ -137,7 +138,7 @@ public class MeetingService {
 
     public ResponseEntity<String> getAllMeetings(String description, String responsiblePerson, String category, String meetingType, String startDate, String endDate, String minAttendeesStr, String maxAttendeesStr) {
         Gson gson = new Gson();
-        ArrayList<Meeting> filteredMeetings;
+        List<Meeting> filteredMeetings;
         try {
             filteredMeetings = filterMeetings(description, responsiblePerson, category, meetingType, startDate, endDate, minAttendeesStr, maxAttendeesStr);
         } catch (ParseException e) {
@@ -151,8 +152,8 @@ public class MeetingService {
 //        return meetings;
     }
 
-    private ArrayList<Meeting> filterMeetings(String description, String responsiblePerson, String category, String meetingType, String startDate, String endDate, String minAttendeesStr, String maxAttendeesStr) throws ParseException {
-        ArrayList<Meeting> filteredMeetings = DataRW.getMeetings();
+    private List<Meeting> filterMeetings(String description, String responsiblePerson, String category, String meetingType, String startDate, String endDate, String minAttendeesStr, String maxAttendeesStr) throws ParseException {
+        List<Meeting> filteredMeetings = DataRW.getMeetings();
         filterMeetingsByDescription(description, filteredMeetings);
         filterMeetingsByResponsiblePerson(responsiblePerson, filteredMeetings);
         filterMeetingsByCategory(category, filteredMeetings);
@@ -163,27 +164,27 @@ public class MeetingService {
         return filteredMeetings;
     }
 
-    private static void filterMeetingsByType(String meetingType, ArrayList<Meeting> filteredMeetings) {
+    private static void filterMeetingsByType(String meetingType, List<Meeting> filteredMeetings) {
         if (meetingType != null)
             filteredMeetings.removeIf(meeting -> !meeting.getType().equals(meetingType));
     }
 
-    private static void filterMeetingsByCategory(String category, ArrayList<Meeting> filteredMeetings) {
+    private static void filterMeetingsByCategory(String category, List<Meeting> filteredMeetings) {
         if (category != null)
             filteredMeetings.removeIf(meeting -> !meeting.getCategory().equals(category));
     }
 
-    private static void filterMeetingsByResponsiblePerson(String responsiblePerson, ArrayList<Meeting> filteredMeetings) {
+    private static void filterMeetingsByResponsiblePerson(String responsiblePerson, List<Meeting> filteredMeetings) {
         if (responsiblePerson != null)
             filteredMeetings.removeIf(meeting -> !meeting.getResponsiblePerson().equals(responsiblePerson));
     }
 
-    private static void filterMeetingsByDescription(String description, ArrayList<Meeting> filteredMeetings) {
+    private static void filterMeetingsByDescription(String description, List<Meeting> filteredMeetings) {
         if (description != null)
             filteredMeetings.removeIf(meeting -> !meeting.getName().contains(description));
     }
 
-    private void filterMeetingsByAttendeesNumber(String minAttendeesStr, String maxAttendeesStr, ArrayList<Meeting> filteredMeetings) {
+    private void filterMeetingsByAttendeesNumber(String minAttendeesStr, String maxAttendeesStr, List<Meeting> filteredMeetings) {
         if (minAttendeesStr != null && maxAttendeesStr != null) {
             int minAttendees = tryParseInt(minAttendeesStr, Integer.MAX_VALUE);
             int maxAttendees = tryParseInt(maxAttendeesStr, 0);
@@ -197,7 +198,7 @@ public class MeetingService {
         }
     }
 
-    private void filterMeetingsByDate(String startDate, String endDate, ArrayList<Meeting> filteredMeetings) throws ParseException {
+    private void filterMeetingsByDate(String startDate, String endDate, List<Meeting> filteredMeetings) throws ParseException {
         if (startDate != null && endDate != null) {
             Date start = shortDateFormat.parse(startDate);
             Date end = shortDateFormat.parse(endDate);
@@ -237,7 +238,7 @@ public class MeetingService {
         }
     }
 
-    private Meeting getMeetingById(int id, ArrayList<Meeting> allMeetings) {
+    private Meeting getMeetingById(int id, List<Meeting> allMeetings) {
         for (Meeting meeting : allMeetings) {
             if (meeting.getId() == id)
                 return meeting;

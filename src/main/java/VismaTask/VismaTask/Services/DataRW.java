@@ -7,10 +7,11 @@ import com.google.gson.JsonArray;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.List;
 
 public class DataRW {
     public static String fileName = "meetings.json";
-    public static void writeMeetings(ArrayList<Meeting> meetings) {
+    public static void writeMeetings(List<Meeting> meetings) {
         Gson gson = new Gson();
         JsonArray meetingsJSONArray = new JsonArray();
         for (Meeting meeting : meetings) {
@@ -23,10 +24,10 @@ public class DataRW {
         }
     }
 
-    public static ArrayList<Meeting> getMeetings() {
+    public static List<Meeting> getMeetings() {
 //        System.out.println("GETTING MEETINGS FROM DATARW");
         Gson gson = new Gson();
-        ArrayList<Meeting> allMeetings = new ArrayList<>();
+        List<Meeting> allMeetings = new ArrayList<>();
         File file = new File(VismaTaskApplication.class.getClassLoader().getResource(fileName).getFile());
         if (file.exists()) {
 //            System.out.println("FILE EXISTS");
