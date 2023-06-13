@@ -1,4 +1,4 @@
-package VismaTask.VismaTask.Model;
+package VismaTask.VismaTask.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,7 +1,8 @@
-package VismaTask.VismaTask.Controller;
+package VismaTask.VismaTask.controller;
 
-import VismaTask.VismaTask.Model.Meeting;
-import VismaTask.VismaTask.Services.MeetingService;
+import VismaTask.VismaTask.DTO.MeetingDTO;
+import VismaTask.VismaTask.model.Meeting;
+import VismaTask.VismaTask.service.MeetingService;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,15 +16,16 @@ public class MeetingController
     @Autowired
     MeetingService meetingService;
     Gson gson = new Gson();
+
     @RequestMapping(value = "/meetings", method = RequestMethod.GET)
-    public ResponseEntity<String> getMeetings(@RequestParam(value = "desc", required = false) String description,
-                                              @RequestParam(value = "resp", required = false) String responsiblePerson,
-                                              @RequestParam(value = "category", required = false) String category,
-                                              @RequestParam(value = "type", required = false) String meetingType,
-                                              @RequestParam(value = "start_date", required = false) String startDate,
-                                              @RequestParam(value = "end_date", required = false) String endDate,
-                                              @RequestParam(value = "min_attendees", required = false) String minAttendeesStr,
-                                              @RequestParam(value = "max_attendees", required = false) String maxAttendeesStr) {
+    public List<MeetingDTO> getMeetings(@RequestParam(value = "desc", required = false) String description,
+                                        @RequestParam(value = "resp", required = false) String responsiblePerson,
+                                        @RequestParam(value = "category", required = false) String category,
+                                        @RequestParam(value = "type", required = false) String meetingType,
+                                        @RequestParam(value = "start_date", required = false) String startDate,
+                                        @RequestParam(value = "end_date", required = false) String endDate,
+                                        @RequestParam(value = "min_attendees", required = false) String minAttendeesStr,
+                                        @RequestParam(value = "max_attendees", required = false) String maxAttendeesStr) {
         return meetingService.getAllMeetings(description, responsiblePerson, category, meetingType, startDate, endDate, minAttendeesStr, maxAttendeesStr);
     }
 

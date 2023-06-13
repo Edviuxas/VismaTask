@@ -1,6 +1,5 @@
 package VismaTask.VismaTask;
 
-import VismaTask.VismaTask.Services.DataRW;
 import org.junit.jupiter.api.*;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +22,7 @@ class VismaTaskApplicationTests {
 
 	@BeforeAll
 	public static void setup() {
-		DataRW.fileName = "meetings_testing.json";
+//		DataRW.fileName = "meetings_testing.json";
 		try (PrintWriter out = new PrintWriter(VismaTaskApplication.class.getClassLoader().getResource("meetings_testing.json").getFile())) {
 			out.write("[{\"id\":1,\"name\":\"labas dienas\",\"description\":\"jkashdjk askjdh aksd haslkd halksd as\",\"category\":\"CodeMonkey\",\"type\":\"Live\",\"startDate\":\"2023-09-02 18:00\",\"endDate\":\"2023-09-02 19:00\",\"responsiblePerson\":\"petriux@gmail.com\",\"participants\":[{\"dateAdded\":\"2023-06-07 18:13\",\"emailAddress\":\"petriux@gmail.com\"},{\"dateAdded\":\"2023-06-07 18:13\",\"emailAddress\":\"petriuxx@gmail.com\"}]},{\"id\":2,\"name\":\"labas vakaras\",\"description\":\"jkashdjk askjdh aksd haslkd halksd as\",\"category\":\"CodeMonkey\",\"type\":\"Live\",\"startDate\":\"2023-06-02 18:00\",\"endDate\":\"2023-06-02 19:00\",\"responsiblePerson\":\"petriux@gmail.com\",\"participants\":[{\"dateAdded\":\"2023-06-07 18:13\",\"emailAddress\":\"petriux@gmail.com\"}]},{\"id\":3,\"name\":\"labas rytas\",\"description\":\"jkashdjk askjdh aksd haslkd halksd as\",\"category\":\"CodeMonkey\",\"type\":\"Live\",\"startDate\":\"2023-06-02 18:00\",\"endDate\":\"2023-06-02 19:00\",\"responsiblePerson\":\"petriux@gmail.com\",\"participants\":[{\"dateAdded\":\"2023-06-07 18:13\",\"emailAddress\":\"petriux@gmail.com\"},{\"dateAdded\":\"2023-06-07 18:13\",\"emailAddress\":\"petriuxx@gmail.com\"}]}]");
 		} catch (Exception e) {

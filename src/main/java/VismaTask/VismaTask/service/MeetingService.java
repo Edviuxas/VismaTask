@@ -1,7 +1,9 @@
-package VismaTask.VismaTask.Services;
+package VismaTask.VismaTask.service;
 
-import VismaTask.VismaTask.Model.Meeting;
-import VismaTask.VismaTask.Model.Participant;
+import VismaTask.VismaTask.DTO.MeetingDTO;
+import VismaTask.VismaTask.model.Meeting;
+import VismaTask.VismaTask.model.Participant;
+import VismaTask.VismaTask.repository.MeetingRepositoryImpl;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import org.springframework.http.HttpStatus;
@@ -11,19 +13,19 @@ import org.springframework.stereotype.Service;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class MeetingService {
+    private final MeetingRepositoryImpl meetingRepository = new MeetingRepositoryImpl();
     DateFormat longDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     DateFormat shortDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
     public ResponseEntity<String> removePersonFromMeeting(int meetingId, String emailAddress) {
-        List<Meeting> allMeetings = DataRW.getMeetings();
-        Meeting meeting = getMeetingById(meetingId, allMeetings);
+        Meeting meeting = meetingRepository.findById(meetingId);
 
         if (meeting == null)
             return new ResponseEntity<>("Meeting with this ID has not been found", HttpStatus.NOT_FOUND);
@@ -35,7 +37,7 @@ public class MeetingService {
             }
             if (participant.getEmailAddress().equals(emailAddress)) {
                 meeting.getParticipants().remove(participant);
-                updateMeeting(meeting, allMeetings);
+                meetingRepository.update(meeting);
                 return new ResponseEntity<>("Removed successfully", HttpStatus.OK);
             }
         }
@@ -43,8 +45,8 @@ public class MeetingService {
     }
 
     public ResponseEntity<String> addPersonToMeeting(int meetingId, String emailAddress) throws ParseException {
-        List<Meeting> allMeetings = DataRW.getMeetings();
-        Meeting meeting = getMeetingById(meetingId, allMeetings);
+        List<Meeting> allMeetings = meetingRepository.findAll();
+        Meeting meeting = meetingRepository.findById(meetingId);
 
         if (meeting == null)
             return new ResponseEntity<>("Meeting with this ID has not been found", HttpStatus.NOT_FOUND);
@@ -53,8 +55,8 @@ public class MeetingService {
             return new ResponseEntity<>("Person has already been added to this meeting", HttpStatus.CONFLICT);
 
         Date date = new Date();
-        meeting.getParticipants().add(new Participant(emailAddress, longDateFormat.format(date)));
-        updateMeeting(meeting, allMeetings);
+        meeting.getParticipants().add(new Participant(longDateFormat.format(date), emailAddress));
+        meetingRepository.update(meeting);
         if (isPersonBusyDuringMeeting(emailAddress, meeting.getStartDate(), meeting.getEndDate(), meetingId, allMeetings)) {
             return new ResponseEntity<>("WARNING: this meeting overlaps with another meeting this person is participating in", HttpStatus.OK);
         } else {
@@ -62,18 +64,8 @@ public class MeetingService {
         }
     }
 
-    private void updateMeeting(Meeting meeting, List<Meeting> allMeetings) {
-        allMeetings = DataRW.getMeetings();
-        for (int i = 0; i < allMeetings.size(); i++) {
-            if (allMeetings.get(i).getId() == meeting.getId()) {
-                allMeetings.set(i, meeting);
-            }
-        }
-        DataRW.writeMeetings(allMeetings);
-    }
-
     private Boolean isPersonBusyDuringMeeting(String emailAddress, String startDateTime, String endDateTime, int meetingId, List<Meeting> allMeetings) throws ParseException {
-        allMeetings = DataRW.getMeetings();
+        allMeetings = meetingRepository.findAll();
         Date startDate = longDateFormat.parse(startDateTime);
         Date endDate = longDateFormat.parse(endDateTime);
         for (Meeting meeting : allMeetings) {
@@ -95,8 +87,8 @@ public class MeetingService {
     }
 
     public ResponseEntity<String> deleteMeeting(int meetingId, String authToken) {
-        List<Meeting> allMeetings = DataRW.getMeetings();
-        Meeting meeting = getMeetingById(meetingId, allMeetings);
+        List<Meeting> allMeetings = meetingRepository.findAll();
+        Meeting meeting = meetingRepository.findById(meetingId);
         if (meeting == null)
             return new ResponseEntity<>("Meeting not found", HttpStatus.NOT_FOUND);
 
@@ -108,10 +100,11 @@ public class MeetingService {
             return new ResponseEntity<>("You are not responsible for this meeting and cannot delete it", HttpStatus.UNAUTHORIZED);
         } else {
             allMeetings.remove(meeting);
-            DataRW.writeMeetings(allMeetings);
+            meetingRepository.saveAll(allMeetings);
             return new ResponseEntity<>("Deleted successfully", HttpStatus.OK);
         }
     }
+
     public ResponseEntity<String> createMeeting(Meeting meeting) {
         String category = meeting.getCategory();
         if (!category.equals("CodeMonkey") && !category.equals("Hub") && !category.equals("Short") && !category.equals("TeamBuilding"))
@@ -121,7 +114,7 @@ public class MeetingService {
         if (!type.equals("Live") && !type.equals("InPerson"))
             return new ResponseEntity<>("Type is not correct", HttpStatus.BAD_REQUEST);
 
-        List<Meeting> allMeetings = DataRW.getMeetings();
+        List<Meeting> allMeetings = meetingRepository.findAll();
         for (Meeting checkMeeting : allMeetings) {
             if (checkMeeting.getId() == meeting.getId())
                 return new ResponseEntity<>("Meeting with this ID already exists", HttpStatus.BAD_REQUEST);
@@ -131,12 +124,11 @@ public class MeetingService {
         Date date = new Date();
         Participant responsiblePersonParticipant = new Participant(responsiblePerson, longDateFormat.format(date));
         meeting.getParticipants().add(responsiblePersonParticipant);
-        allMeetings.add(meeting);
-        DataRW.writeMeetings(allMeetings);
+        meetingRepository.save(meeting);
         return new ResponseEntity<>("Created successfully", HttpStatus.CREATED);
     }
 
-    public ResponseEntity<String> getAllMeetings(String description, String responsiblePerson, String category, String meetingType, String startDate, String endDate, String minAttendeesStr, String maxAttendeesStr) {
+    public List<MeetingDTO> getAllMeetings(String description, String responsiblePerson, String category, String meetingType, String startDate, String endDate, String minAttendeesStr, String maxAttendeesStr) {
         Gson gson = new Gson();
         List<Meeting> filteredMeetings;
         try {
@@ -144,16 +136,27 @@ public class MeetingService {
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
-        JsonArray response = gson.toJsonTree(filteredMeetings).getAsJsonArray();
-        if (response.size() > 0)
-            return new ResponseEntity<>(response.toString(), HttpStatus.OK);
-        else
-            return new ResponseEntity<>("NOT FOUND", HttpStatus.NOT_FOUND);
-//        return meetings;
+        return filteredMeetings.stream()
+                .map(this::convertEntityToDto)
+                .collect(Collectors.toList());
+    }
+
+    private MeetingDTO convertEntityToDto(Meeting meeting) {
+        MeetingDTO meetingDTO = new MeetingDTO();
+        meetingDTO.setId(meeting.getId());
+        meetingDTO.setDescription(meeting.getDescription());
+        meetingDTO.setCategory(meeting.getCategory());
+        meetingDTO.setName(meeting.getName());
+        meetingDTO.setParticipants(meeting.getParticipants());
+        meetingDTO.setStartDate(meeting.getStartDate());
+        meetingDTO.setEndDate(meeting.getEndDate());
+        meetingDTO.setType(meeting.getType());
+        meetingDTO.setResponsiblePerson(meeting.getResponsiblePerson());
+        return meetingDTO;
     }
 
     private List<Meeting> filterMeetings(String description, String responsiblePerson, String category, String meetingType, String startDate, String endDate, String minAttendeesStr, String maxAttendeesStr) throws ParseException {
-        List<Meeting> filteredMeetings = DataRW.getMeetings();
+        List<Meeting> filteredMeetings = meetingRepository.findAll();
         filterMeetingsByDescription(description, filteredMeetings);
         filterMeetingsByResponsiblePerson(responsiblePerson, filteredMeetings);
         filterMeetingsByCategory(category, filteredMeetings);
@@ -236,13 +239,5 @@ public class MeetingService {
         } catch (NumberFormatException e) {
             return defaultVal;
         }
-    }
-
-    private Meeting getMeetingById(int id, List<Meeting> allMeetings) {
-        for (Meeting meeting : allMeetings) {
-            if (meeting.getId() == id)
-                return meeting;
-        }
-        return null;
     }
 }
